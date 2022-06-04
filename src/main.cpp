@@ -1,6 +1,8 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 
+#include "vulkan_base/vulkan_base.h"
+
 int main() {
 
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -11,6 +13,8 @@ int main() {
 	}
 
 	SDL_Window* window = SDL_CreateWindow("Hello, Vulkan!", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 800, 600, SDL_WINDOW_VULKAN);
+
+    VulkanContext* context = initVulkan();
 
 	if (!window)
 	{
