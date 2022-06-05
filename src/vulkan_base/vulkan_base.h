@@ -17,4 +17,4 @@ struct VulkanContext
 	VkInstance instance;
 };
 
-VulkanContext* initVulkan();
+VulkanContext* initVulkan(uint32_t instanceExtensionCount, const char** instanceExtensions);
