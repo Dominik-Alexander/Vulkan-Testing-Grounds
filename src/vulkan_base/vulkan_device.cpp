@@ -13,10 +13,21 @@ bool initVulkanInstance(VulkanContext* context) {
 		std::cout << layerProperties[i].layerName << std::endl;
 		std::cout << layerProperties[i].description << std::endl;
 	}
+	delete[] layerProperties;
 
 	const char* enabledLayers[] = {
 		"VK_LAYER_KHRONOS_validation"
 	};
+
+	uint32_t instanceExtensionCount = 0;
+	vkEnumerateInstanceExtensionProperties(0, &instanceExtensionCount, 0);
+	VkExtensionProperties* instanceExtensionProperties = new VkExtensionProperties[instanceExtensionCount];
+	vkEnumerateInstanceExtensionProperties(0, &instanceExtensionCount, instanceExtensionProperties);
+	for (uint32_t i = 0; i < instanceExtensionCount; ++i)
+	{
+		std::cout << instanceExtensionProperties[i].extensionName << std::endl;
+	}
+	delete[] instanceExtensionProperties;
 
 	VkApplicationInfo applicationInfo = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
 	applicationInfo.pApplicationName = "Vulkan-Testing-Grounds";
