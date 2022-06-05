@@ -3,20 +3,35 @@
 #include <SDL.h>
 #include <iostream>
 
-bool initVulkanInstance(VulkanContext* context) {
+bool initVulkanInstance(VulkanContext* context, uint32_t instanceExtensionCount, const char** instanceExtensions) {
 	uint32_t layerPropertyCount = 0;
 	VKA(vkEnumerateInstanceLayerProperties(&layerPropertyCount, 0));
 	VkLayerProperties* layerProperties = new VkLayerProperties[layerPropertyCount];
 	VKA(vkEnumerateInstanceLayerProperties(&layerPropertyCount, layerProperties));
 	for (uint32_t i = 0; i < layerPropertyCount; ++i)
 	{
+#ifdef VULKAN_INFO_OUTPUT
 		std::cout << layerProperties[i].layerName << std::endl;
 		std::cout << layerProperties[i].description << std::endl;
+#endif // VULKAN_INFO_OUTPUT
 	}
+	delete[] layerProperties;
 
 	const char* enabledLayers[] = {
 		"VK_LAYER_KHRONOS_validation"
 	};
+
+	uint32_t availableInstanceExtensionCount = 0;
+	VKA(vkEnumerateInstanceExtensionProperties(0, &availableInstanceExtensionCount, 0));
+	VkExtensionProperties* instanceExtensionProperties = new VkExtensionProperties[availableInstanceExtensionCount];
+	VKA(vkEnumerateInstanceExtensionProperties(0, &availableInstanceExtensionCount, instanceExtensionProperties));
+	for (uint32_t i = 0; i < availableInstanceExtensionCount; ++i)
+	{
+#ifdef VULKAN_INFO_OUTPUT
+		std::cout << instanceExtensionProperties[i].extensionName << std::endl;
+#endif // VULKAN_INFO_OUTPUT
+	}
+	delete[] instanceExtensionProperties;
 
 	VkApplicationInfo applicationInfo = { VK_STRUCTURE_TYPE_APPLICATION_INFO };
 	applicationInfo.pApplicationName = "Vulkan-Testing-Grounds";
@@ -29,6 +44,8 @@ bool initVulkanInstance(VulkanContext* context) {
 	createInfo.pApplicationInfo = &applicationInfo;
 	createInfo.enabledLayerCount = ARRAY_COUNT(enabledLayers);
 	createInfo.ppEnabledLayerNames = enabledLayers;
+	createInfo.enabledExtensionCount = instanceExtensionCount;
+	createInfo.ppEnabledExtensionNames = instanceExtensions;
 	
 	if (VK(vkCreateInstance(&createInfo, 0, &context->instance)) != VK_SUCCESS)
 	{
@@ -39,10 +56,10 @@ bool initVulkanInstance(VulkanContext* context) {
 	return true;
 }
 
-VulkanContext* initVulkan() {
+VulkanContext* initVulkan(uint32_t instanceExtensionCount, const char** instanceExtensions) {
 	VulkanContext* context = new VulkanContext;
 
-	if (!initVulkanInstance(context))
+	if (!initVulkanInstance(context, instanceExtensionCount, instanceExtensions))
 	{
 		return 0;
 	}
