@@ -74,6 +74,13 @@ bool selectPhysicalDevice(VulkanContext* context) {
 		VK(vkGetPhysicalDeviceProperties(physicalDevices[i], &properties));
 		std::cout << "GPU " << i << ": " << properties.deviceName << std::endl;
 	}
+
+	context->physicalDevice = physicalDevices[0];
+	VK(vkGetPhysicalDeviceProperties(context->physicalDevice, &context->physicalDeviceProperties));
+	std::cout << "Selected GPU: " << context->physicalDeviceProperties.deviceName << std::endl;
+
+	delete[] physicalDevices;
+
 	return true;
 }
 
