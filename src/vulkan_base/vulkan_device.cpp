@@ -66,9 +66,14 @@ bool selectPhysicalDevice(VulkanContext* context) {
 		return false;
 	}
 	VkPhysicalDevice* physicalDevices = new VkPhysicalDevice[numDevices];
-	vkEnumeratePhysicalDevices(context->instance, &numDevices, physicalDevices);
+	VKA(vkEnumeratePhysicalDevices(context->instance, &numDevices, physicalDevices));
 	std::cout << "Found " << numDevices << " GPU(s)" << std::endl;
-
+	for (uint32_t i = 0; i < numDevices; ++i)
+	{
+		VkPhysicalDeviceProperties properties = {};
+		VK(vkGetPhysicalDeviceProperties(physicalDevices[i], &properties));
+		std::cout << "GPU " << i << ": " << properties.deviceName << std::endl;
+	}
 	return true;
 }
 
