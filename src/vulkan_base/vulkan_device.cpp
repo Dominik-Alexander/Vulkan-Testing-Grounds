@@ -38,7 +38,7 @@ bool initVulkanInstance(VulkanContext* context, uint32_t instanceExtensionCount,
 	applicationInfo.applicationVersion = VK_MAKE_VERSION(0, 0, 1);
 	applicationInfo.pEngineName = "Hello Vulkan";
 	applicationInfo.engineVersion = VK_MAKE_VERSION(0, 0, 1);
-	applicationInfo.apiVersion = VK_VERSION_1_0;
+	applicationInfo.apiVersion = VK_API_VERSION_1_0;
 
 	VkInstanceCreateInfo createInfo = { VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO };
 	createInfo.pApplicationInfo = &applicationInfo;
@@ -56,10 +56,43 @@ bool initVulkanInstance(VulkanContext* context, uint32_t instanceExtensionCount,
 	return true;
 }
 
+bool selectPhysicalDevice(VulkanContext* context) {
+	uint32_t numDevices = 0;
+	VKA(vkEnumeratePhysicalDevices(context->instance, &numDevices, 0));
+	if (numDevices == 0)
+	{
+		std::cout << "No device with Vulkan support found! :(" << std::endl;
+		context->physicalDevice = 0;
+		return false;
+	}
+	VkPhysicalDevice* physicalDevices = new VkPhysicalDevice[numDevices];
+	VKA(vkEnumeratePhysicalDevices(context->instance, &numDevices, physicalDevices));
+	std::cout << "Found " << numDevices << " GPU(s)" << std::endl;
+	for (uint32_t i = 0; i < numDevices; ++i)
+	{
+		VkPhysicalDeviceProperties properties = {};
+		VK(vkGetPhysicalDeviceProperties(physicalDevices[i], &properties));
+		std::cout << "GPU " << i << ": " << properties.deviceName << std::endl;
+	}
+
+	context->physicalDevice = physicalDevices[0];
+	VK(vkGetPhysicalDeviceProperties(context->physicalDevice, &context->physicalDeviceProperties));
+	std::cout << "Selected GPU: " << context->physicalDeviceProperties.deviceName << std::endl;
+
+	delete[] physicalDevices;
+
+	return true;
+}
+
 VulkanContext* initVulkan(uint32_t instanceExtensionCount, const char** instanceExtensions) {
 	VulkanContext* context = new VulkanContext;
 
 	if (!initVulkanInstance(context, instanceExtensionCount, instanceExtensions))
+	{
+		return 0;
+	}
+
+	if (!selectPhysicalDevice(context))
 	{
 		return 0;
 	}
