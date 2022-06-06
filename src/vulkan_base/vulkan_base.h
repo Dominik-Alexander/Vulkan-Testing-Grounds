@@ -15,6 +15,7 @@
 struct VulkanContext
 {
 	VkInstance instance;
+	VkPhysicalDevice physicalDevice;
 };
 
 VulkanContext* initVulkan(uint32_t instanceExtensionCount, const char** instanceExtensions);
