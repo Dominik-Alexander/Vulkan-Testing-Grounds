@@ -20,7 +20,7 @@ int main() {
     const char** enabledInstanceExtensions = new const char* [instanceExtensionCount];
     SDL_Vulkan_GetInstanceExtensions(window, &instanceExtensionCount, enabledInstanceExtensions);
 
-    VulkanContext* context = initVulkan(instanceExtensionCount, enabledInstanceExtensions);
+    VulkanContext* context = initVulkan(instanceExtensionCount, enabledInstanceExtensions, 0, 0);
 
 	if (!window)
 	{
@@ -54,6 +54,8 @@ int main() {
             }
         }
     }
+
+    exitVulkan(context);
 
 	SDL_DestroyWindow(window);
 	SDL_Quit();
