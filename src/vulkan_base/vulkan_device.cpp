@@ -1,7 +1,6 @@
 #include "vulkan_base.h"
 
 #include <SDL.h>
-#include <iostream>
 
 bool initVulkanInstance(VulkanContext* context, uint32_t instanceExtensionCount, const char** instanceExtensions) {
 	uint32_t layerPropertyCount = 0;
