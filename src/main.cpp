@@ -9,6 +9,9 @@ VkSurfaceKHR surface;
 VkRenderPass renderPass;
 VulkanSwapchain swapchain;
 std::vector<VkFramebuffer> framebuffers;
+VkCommandPool commandPool;
+VkCommandBuffer commandBuffer;
+VkFence fence;
 
 void initApplication(SDL_Window* window) {
     uint32_t instanceExtensionCount = 0;
@@ -35,14 +38,77 @@ void initApplication(SDL_Window* window) {
         createInfo.layers = 1;
         VKA(vkCreateFramebuffer(context->device, &createInfo, 0, &framebuffers[i]));
     }
+
+    {
+        VkFenceCreateInfo createInfo = { VK_STRUCTURE_TYPE_FENCE_CREATE_INFO };
+        VKA(vkCreateFence(context->device, &createInfo, 0, &fence))
+    }
+    
+    {
+        VkCommandPoolCreateInfo createInfo = { VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO };
+        createInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+        createInfo.queueFamilyIndex = context->graphicsQueue.familyIndex;
+        VKA(vkCreateCommandPool(context->device, &createInfo, 0, &commandPool));
+    }
+
+    {
+        VkCommandBufferAllocateInfo allocateInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+        allocateInfo.commandPool = commandPool;
+        allocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocateInfo.commandBufferCount = 1;
+        VKA(vkAllocateCommandBuffers(context->device, &allocateInfo, &commandBuffer));
+    }
 }
 
 void renderApplication() {
+    static float greenChannel = 0.0f;
+    greenChannel += 0.01f;
+    if (greenChannel > 1.0f) greenChannel = 0.0f;
+    uint32_t imageIndex = 0;
+    VK(vkAcquireNextImageKHR(context->device, swapchain.swapchain, UINT64_MAX, 0, fence, &imageIndex));
 
+    VKA(vkResetCommandPool(context->device, commandPool, 0));
+
+    VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+    VKA(vkBeginCommandBuffer(commandBuffer, &beginInfo));
+    {
+        VkClearValue clearValue = { 0.0f, greenChannel, 0.25f, 1.0f };
+        VkRenderPassBeginInfo beginInfo = { VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO };
+        beginInfo.renderPass = renderPass;
+        beginInfo.framebuffer = framebuffers[imageIndex];
+        beginInfo.renderArea = { {0, 0}, {swapchain.width, swapchain.height} };
+        beginInfo.clearValueCount = 1;
+        beginInfo.pClearValues = &clearValue;
+        vkCmdBeginRenderPass(commandBuffer, &beginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        vkCmdEndRenderPass(commandBuffer);
+    }
+    VKA(vkEndCommandBuffer(commandBuffer));
+
+    VKA(vkWaitForFences(context->device, 1, &fence, VK_TRUE, UINT64_MAX));
+    VKA(vkResetFences(context->device, 1, &fence));
+
+    VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+    VKA(vkQueueSubmit(context->graphicsQueue.queue, 1, &submitInfo, 0));
+
+    VKA(vkDeviceWaitIdle(context->device));
+
+    VkPresentInfoKHR presentInfo = { VK_STRUCTURE_TYPE_PRESENT_INFO_KHR };
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = &swapchain.swapchain;
+    presentInfo.pImageIndices = &imageIndex;
+    VK(vkQueuePresentKHR(context->graphicsQueue.queue, &presentInfo));
 }
 
 void shutdownApplication() {
     VKA(vkDeviceWaitIdle(context->device));
+
+    VK(vkDestroyFence(context->device, fence, 0));
+    VK(vkDestroyCommandPool(context->device, commandPool, 0));
+
     for (uint32_t i = 0; i < framebuffers.size(); ++i)
     {
         VK(vkDestroyFramebuffer(context->device, framebuffers[i], 0));
