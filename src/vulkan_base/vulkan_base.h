@@ -30,6 +30,12 @@ struct VulkanSwapchain
 	std::vector<VkImageView> imageViews;
 };
 
+struct VulkanPipeline
+{
+	VkPipeline pipeline;
+	VkPipelineLayout pipelineLayout;
+};
+
 struct VulkanContext
 {
 	VkInstance instance;
@@ -47,3 +53,6 @@ void destroySwapchain(VulkanContext* context, VulkanSwapchain* swapchain);
 
 VkRenderPass createRenderPass(VulkanContext* context, VkFormat format);
 void destroyRenderpass(VulkanContext* context, VkRenderPass renderPass);
+
+VulkanPipeline createPipeline(VulkanContext* context, const char* vertexShaderFilename, const char* fragmentShaderFilename, VkRenderPass renderPass, uint32_t width, uint32_t height);
+void destroyPipeline(VulkanContext* context, VulkanPipeline* pipeline);

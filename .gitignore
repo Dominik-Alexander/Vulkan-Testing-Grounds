@@ -611,3 +611,6 @@ debian/.debhelper/
 debian/files
 debian/libsdl*/
 debian/tmp/
+
+# Vulkan
+*.spv
